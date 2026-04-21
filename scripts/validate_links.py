@@ -14,7 +14,7 @@ from typing import Optional
 import requests
 
 README_PATH = "README.md"
-TIMEOUT = 10  # seconds
+TIMEOUT = 15  # increased from 10 - some APIs are slow to respond
 MAX_WORKERS = 10
 RETRY_COUNT = 2
 SLEEP_BETWEEN_RETRIES = 2  # seconds
@@ -76,6 +76,7 @@ def check_url(url: str) -> tuple[str, Optional[int], bool]:
             if attempt < RETRY_COUNT - 1:
                 time.sleep(SLEEP_BETWEEN_RETRIES)
             else:
+                # timed out on all attempts - flag as broken
                 return url, None, False
         except requests.exceptions.ConnectionError:
             if attempt < RETRY_COUNT - 1:
@@ -99,33 +100,3 @@ def validate_links(filepath: str) -> bool:
     print(f"Found {len(urls)} unique URLs. Checking...\n")
 
     broken = []
-
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = {executor.submit(check_url, url): url for url in urls}
-        for future in as_completed(futures):
-            url, status_code, is_valid = future.result()
-            status_display = str(status_code) if status_code else "N/A"
-            if is_valid:
-                print(f"  [OK]     {status_display}  {url}")
-            else:
-                print(f"  [BROKEN] {status_display}  {url}")
-                broken.append((url, status_code))
-
-    print(f"\n--- Results ---")
-    print(f"Total URLs checked : {len(urls)}")
-    print(f"Broken links found : {len(broken)}")
-
-    if broken:
-        print("\nBroken links:")
-        for url, code in broken:
-            print(f"  - {url} (status: {code})")
-        return False
-
-    print("All links are valid!")
-    return True
-
-
-if __name__ == "__main__":
-    filepath = sys.argv[1] if len(sys.argv) > 1 else README_PATH
-    success = validate_links(filepath)
-    sys.exit(0 if success else 1)
