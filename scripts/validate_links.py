@@ -16,7 +16,7 @@ import requests
 README_PATH = "README.md"
 TIMEOUT = 15  # increased from 10 - some APIs are slow to respond
 MAX_WORKERS = 10
-RETRY_COUNT = 2
+RETRY_COUNT = 3  # bumped to 3 since I kept seeing flaky failures on first attempt
 SLEEP_BETWEEN_RETRIES = 2  # seconds
 
 # Status codes that are considered acceptable (not broken links)
@@ -96,7 +96,4 @@ def validate_links(filepath: str) -> bool:
         True if all links are valid, False otherwise.
     """
     print(f"Extracting URLs from '{filepath}'...")
-    urls = extract_urls(filepath)
-    print(f"Found {len(urls)} unique URLs. Checking...\n")
-
-    broken = []
+    url
